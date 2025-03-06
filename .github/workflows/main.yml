@@ -8,8 +8,22 @@ on:
 jobs:
   build-deploy:
     name: Build and Package SpringBootJWT
-    runs-on: windows-latest
-    
+    runs-on: ubuntu-latest  # Changed from Windows to Ubuntu to support MySQL service
+
+    services:
+      mysql:
+        image: mysql:8
+        env:
+          MYSQL_ROOT_PASSWORD: root
+          MYSQL_DATABASE: security_jwt
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping --host=127.0.0.1 --user=root --password=root"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=3
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -20,6 +34,11 @@ jobs:
           distribution: 'temurin'
           java-version: 17
           cache: maven
+
+      - name: Configure Database Connection
+        run: |
+          sed -i 's|localhost|127.0.0.1|g' src/main/resources/application.properties
+          cat src/main/resources/application.properties
 
       - name: Build with Maven
         run: mvn clean package -DskipTests=false
