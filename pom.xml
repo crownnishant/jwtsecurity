@@ -113,6 +113,7 @@
 				</configuration>
 			</plugin>
 		</plugins>
+		<finalName>jwtsecurity-githubactions</finalName>
 	</build>
 
 </project>
