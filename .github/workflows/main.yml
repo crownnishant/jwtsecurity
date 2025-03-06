@@ -6,12 +6,12 @@ on:
       - master
 
 jobs:
-  build:
-    name: Build and Test
+  build-deploy:
+    name: Build and Package SpringBootJWT
     runs-on: windows-latest
     
     steps:
-      - name: Checkout Code
+      - name: Checkout repository
         uses: actions/checkout@v4
 
       - name: Set Up JDK 17
@@ -35,7 +35,7 @@ jobs:
 
   docker:
     name: Build & Push Docker Image
-    needs: build
+    needs: build-deploy
     runs-on: ubuntu-latest
 
     steps:
@@ -54,12 +54,10 @@ jobs:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
 
-      - name: Build Docker Image
-        run: |
-          docker build -t ${{ secrets.DOCKER_USERNAME }}/spring-boot-app:latest .
-          docker tag ${{ secrets.DOCKER_USERNAME }}/spring-boot-app:latest ${{ secrets.DOCKER_USERNAME }}/spring-boot-app:${{ github.sha }}
-
-      - name: Push Docker Image
-        run: |
-          docker push ${{ secrets.DOCKER_USERNAME }}/spring-boot-app:latest
-          docker push ${{ secrets.DOCKER_USERNAME }}/spring-boot-app:${{ github.sha }}
+      - name: Build & Push Docker Image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: Dockerfile
+          push: true
+          tags: ${{ secrets.DOCKER_USERNAME }}/jwtsecurity:latest
